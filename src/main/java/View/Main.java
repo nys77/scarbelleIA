@@ -11,7 +11,7 @@ import java.util.Random;
 
 public class Main {
     ArrayList<JPanel> panel_main;
-    ArrayList<Character> charac_main;
+    public ArrayList<Character> charac_main;
     model model_;
     public Main(JFrame fenetre_, int i, model model){
         panel_main = new ArrayList<JPanel>();
@@ -43,31 +43,25 @@ public class Main {
         for(int i = 0; i < panel_main.size(); i++)
         {
             Random rand = new Random();
-            int r = rand.nextInt(model_.getMap().size()) - 1;
-            char to_add = 'z';
-            if (r + 99 == 123)
-                to_add = '!';
-            else
-                to_add = int_charac(r);
+            int r = rand.nextInt(model_.get_rand().size() -1) ;
+            char to_add = model_.get_rand().get(r);
             Character update = new Character(to_add);
 
             while (!(can_take(update)))
             {
                 rand = new Random();
-                r = rand.nextInt(model_.getMap().size()) - 1;
-                if (r + 99 == 123)
-                    to_add = '!';
-                else
-                    to_add = int_charac(r);
+                r = rand.nextInt(model_.get_rand().size() -1) ;
+                to_add = model_.get_rand().get(r);
                 update = new Character(to_add);
             }
+            model_.get_rand().remove(r);
             update_model(update);
             charac_main.add(update);
             setPanel(panel_main.get(i),update);
         }
     }
 
-    public void setPanel(JPanel to_set,Character a) {
+    public static void setPanel(JPanel to_set,Character a) {
         JLabel label;
         JPanel tmp = new JPanel(new BorderLayout());
         if (a == 'a') {
@@ -168,14 +162,10 @@ public class Main {
         to_set.add(tmp, BorderLayout.CENTER);
     }
 
-    public char int_charac(int r)
-    {
-        return (char) (r + 98);
-    }
+
 
     public boolean can_take(Character update)
     {
-        System.out.println(update);
         for (Map.Entry<Character, Integer>  i : model_.getMap().entrySet() )
         {
             if (i.getKey().equals(update) )
@@ -205,5 +195,6 @@ public class Main {
         {
             System.out.print(charac_main.get(i) + " | ");
         }
+        System.out.println("");
     }
 }
