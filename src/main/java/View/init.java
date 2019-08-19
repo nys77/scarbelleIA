@@ -53,6 +53,20 @@ public class init {
         String best_option = combineur.best_solution(conv(player1.getMain().charac_main));
         System.out.println(best_option);
         to_conv_panel(7,7,best_option);
+        player1.getMain().remove_caracter(convert_to_array(best_option));
+        player1.getMain().tirage(best_option.length());
+        player1.getMain().print_main();
+
+    }
+
+    public ArrayList<String> convert_to_array(String s)
+    {
+        ArrayList<String> a = new ArrayList<String>();
+        for(int i = 0; i < s.length();i++)
+        {
+            a.add(Character.toString(s.charAt(i)));
+        }
+        return a;
     }
 
     public void to_conv_panel(int x, int y, String word)
