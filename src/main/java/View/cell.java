@@ -7,43 +7,60 @@ import java.io.IOException;
 
 public class cell {
 
+
+    public enum Type {
+        letre_triple,
+        lettre_double,
+        mot_double,
+        mot_triple,
+        nothing
+    }
+
+
     int x_;
     int y_;
     Image img_;
     String url_;
+    Type type_cell;
     public cell(int x, int y)
     {
         x_ = x;
         y_= y;
-        load_img(x,y);
+        load_img_type(x,y);
     }
 
-    public void load_img(int x, int y)
+    public void load_img_type(int x, int y)
     {
         if (is_center(x,y))
         {
             url_ = "tests/ressources/cell/cell_central.png";
+            type_cell = Type.mot_double;
 
         }
         else if (is_word_triple(x,y))
         {
             url_ = "tests/ressources/cell/mot_triple.png";
+            type_cell = Type.mot_triple;
         }
         else if (is_word_double(x,y))
         {
             url_ = "tests/ressources/cell/mot_double.png";
+            type_cell = Type.mot_double;
         }
         else if (is_letter_double(x,y))
         {
             url_ = "tests/ressources/cell/lettre_double.png";
+            type_cell = Type.lettre_double;
         }
         else if (is_letter_triple(x,y))
         {
             url_ = "tests/ressources/cell/lettre_triple.png";
+            type_cell = Type.letre_triple;
         }
         else
         {
             url_ = "tests/ressources/cell/cell_normal.png";
+            type_cell = Type.nothing;
         }
 
         try {

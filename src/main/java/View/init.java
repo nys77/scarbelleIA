@@ -23,6 +23,7 @@ public class init {
     public init(model model)
     {
         map_ = new map();
+        map_.print_grid();
         JFrame t = new JFrame();
         grid_panel_ = new JPanel[15][15];
         t.setSize(new Dimension(800,800));
