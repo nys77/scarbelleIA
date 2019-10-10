@@ -31,6 +31,7 @@ public class Dawg {
         tmp.add("RADOBE");
         tmp.add("ADOBERER");
         create_word(result,tmp.get(0),0);
+        create_word(result,tmp.get(1),0);
        /* for(int i = 0; i < tmp.size(); i++)
         {
             int cmp = 0;
@@ -57,7 +58,7 @@ public class Dawg {
         {
             graph.next_ = new Dawg();
         }
-        if (graph.next_ != null && graph.child_ == null)
+        if (graph.next_ != null && (graph.child_ == null || graph.letter_ != word.charAt(cmp)))
         {
             return create_word(graph.next_,word,cmp);
         }
