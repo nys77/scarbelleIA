@@ -52,7 +52,7 @@ public class Dawg {
         {
             graph.letter_ = word.charAt(cmp);
             graph.child_ = new Dawg();
-            return create_word(graph,word,cmp );
+            return create_word(graph,word,cmp);
         }
         if(graph.next_ == null && graph.child_ == null && graph.letter_ != null)
         {
