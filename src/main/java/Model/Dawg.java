@@ -1,5 +1,8 @@
 package Model;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
@@ -23,19 +26,21 @@ public class Dawg {
         letter_ = letter;
     }
 
-    public Dawg create_dawg(String FileName)
+    public Dawg create_dawg(String filename)
     {
         Dawg result = new Dawg();
-        ArrayList<String> tmp = new ArrayList<String>();
-        tmp.add("ADOBE");
-        tmp.add("RADOBE");
-        tmp.add("ADOBERER");
-        create_word(result,tmp.get(0),0);
-       /* for(int i = 0; i < tmp.size(); i++)
-        {
-            int cmp = 0;
-            create_word(result,tmp.get(i),cmp);
+        ArrayList<String> all_word = new ArrayList<String>();
+        all_word.add("ANNIBALLE");
+        all_word.add("PIPI");
+        /*try {
+            all_word = create_liste(filename);
+        } catch (IOException e) {
+            e.printStackTrace();
         }*/
+        for(int i = 0; i < all_word.size();i++)
+        {
+            create_word(result, all_word.get(i),0);
+        }
         return result;
     }
 
@@ -66,6 +71,20 @@ public class Dawg {
             return create_word(graph.child_,word,cmp + 1);
         }
         return graph;
+    }
+
+
+    public static ArrayList<String> create_liste(String filename) throws IOException {
+        ArrayList<String> result = new ArrayList<String>();
+        BufferedReader br = new BufferedReader(new FileReader(filename));
+        String line = "";
+        while ((line = br.readLine()) != null) {
+            result.add(line);
+        }
+        br.close();
+
+
+        return result;
     }
 
 }
