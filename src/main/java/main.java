@@ -5,10 +5,10 @@ import View.init;
 public class main {
     public static void main(String[] args) {
         Dawg a = new Dawg();
-        Dawg result = a.create_dawg("toto");
+        Dawg result = a.create_dawg("tests/ressources/dico/dico.txt");
         System.out.println("Hello");
-       // model a = new model();
-       // new init(a);
+        model mode = new model();
+        new init(mode,result);
     }
 
 

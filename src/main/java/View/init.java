@@ -1,10 +1,6 @@
 package View;
 
-import Model.GameManager;
-import Model.Letter;
-import Model.Player;
-import Model.model;
-
+import Model.*;
 
 
 import javax.swing.*;
@@ -20,9 +16,11 @@ public class init {
     Player player1;
     Player player2;
     JPanel[][] grid_panel_;
-    public init(model model)
+    Dawg graph_;
+    public init(model model, Dawg graph)
     {
         map_ = new map();
+        graph_ = graph;
         map_.print_grid();
         JFrame t = new JFrame();
         grid_panel_ = new JPanel[15][15];
@@ -51,7 +49,7 @@ public class init {
         t.add(pan,BorderLayout.CENTER);
         t.setVisible(true);
         t.pack();
-        String best_option = combineur.best_solution(conv(player1.getMain().charac_main));
+        String best_option = combineur.best_solution(conv(player1.getMain().charac_main),graph_);
         System.out.println(best_option);
         to_conv_panel(7,7,best_option);
         player1.getMain().remove_caracter(convert_to_array(best_option));

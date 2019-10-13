@@ -11,12 +11,14 @@ public class Dawg {
     public Dawg next_;
     public Dawg child_;
     public Character letter_;
+    public  boolean end_word;
 
     public  Dawg ()
     {
         next_ = null;
         child_ = null;
         letter_ = null;
+        end_word = false;
     }
 
     public Dawg(Character letter)
@@ -24,19 +26,19 @@ public class Dawg {
         next_ = null;
         child_ = null;
         letter_ = letter;
+        end_word = false;
     }
 
     public Dawg create_dawg(String filename)
     {
         Dawg result = new Dawg();
-        ArrayList<String> all_word = new ArrayList<String>();
-        all_word.add("ANNIBALLE");
-        all_word.add("PIPI");
-        /*try {
+        ArrayList<String> all_word = null;
+        try {
             all_word = create_liste(filename);
         } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
+
         for(int i = 0; i < all_word.size();i++)
         {
             create_word(result, all_word.get(i),0);
@@ -46,8 +48,10 @@ public class Dawg {
 
     public Dawg create_word(Dawg graph,String word,int cmp)
     {
-        if (cmp == word.length())
+        if (cmp == word.length()) {
+            graph.end_word = true;
             return graph;
+        }
         if(graph.letter_ == null)
         {
             graph.letter_ = word.charAt(cmp);
@@ -62,7 +66,7 @@ public class Dawg {
         {
             graph.next_ = new Dawg();
         }
-        if (graph.next_ != null && graph.child_ == null)
+        if (graph.next_ != null && (graph.child_ == null || graph.letter_ != word.charAt(cmp)))
         {
             return create_word(graph.next_,word,cmp);
         }
@@ -85,6 +89,34 @@ public class Dawg {
 
 
         return result;
+    }
+    public boolean word_existe(Dawg graph,String word,int cmp)
+    {
+        if (cmp == word.length() && graph.end_word == true)
+            return true;
+        else if (cmp == word.length() && graph.end_word == false)
+            return false;
+        if(graph.letter_ == null)
+            return false;
+        if(graph.child_ != null && word.charAt(cmp) == graph.letter_ )
+        {
+            return word_existe(graph.child_,word,cmp+ 1);
+        }
+        else if (word.charAt(cmp) == graph.letter_ && graph.child_ == null && cmp != word.length())
+        {
+            return false;
+        }
+        else if (word.charAt(cmp) != graph.letter_ && graph.next_ != null)
+        {
+            return word_existe(graph.next_,word,cmp);
+        }
+        else if (word.charAt(cmp) != graph.letter_ && graph.next_ == null)
+        {
+            return false;
+        }
+
+
+        return false;
     }
 
 }
