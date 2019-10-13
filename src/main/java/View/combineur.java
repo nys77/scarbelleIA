@@ -1,5 +1,7 @@
 package View;
 
+import Model.Dawg;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,7 +72,7 @@ public class combineur {
         return res;
     }
 
-    public static String best_solution(ArrayList<String> letter)
+    public static String best_solution(ArrayList<String> letter, Dawg graph)
     {
         int max = 0;
         ArrayList<String> tmp = to_create_combin(letter);
@@ -87,14 +89,10 @@ public class combineur {
                 if (max >= cost)
                     continue;
                 else {
-                    try {
-                        if (existenceMot(res.get(j))) {
+                        if (graph.word_existe(graph,res.get(j),0)) {
                             test.add(res.get(j));
                             max = cost;
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
             if (test.size() > 0 && !(res1.contains(test)))
@@ -116,22 +114,7 @@ public class combineur {
 
     }
 
-    public static void main(String[] args) {
-        ArrayList<String> a = new ArrayList<String>();
-        a.add("s");
-        a.add("a");
-        a.add("l");
-        a.add("u");
-        a.add("t");
-       /* a.add("e");
-        a.add("g");*/
-        String re = best_solution(a);
-        if (re.equals("salut"))
-        {
-            System.out.println("Succes");
-        }
 
-    }
     public static ArrayList<String> test(String letter)
     {
         ArrayList<String > res = new ArrayList<String>();
