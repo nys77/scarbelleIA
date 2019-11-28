@@ -1,11 +1,13 @@
 package dawgTest;
 
 import Model.Dawg;
-
+import org.junit.Test;
 
 
 public class test {
 
+
+    @Test
     public static void testDawg(String filename)
     {
         Dawg a = new Dawg();
@@ -51,6 +53,8 @@ public class test {
         }
     }
 
+
+    @Test
     public static void test_find_word(String filename)
     {
         Dawg a = new Dawg();
