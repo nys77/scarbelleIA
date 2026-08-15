@@ -1,164 +1,163 @@
 package View;
 
-import Model.Dawg;
+import Model.Dictionary.Dawg;
+import Config.AssetsConfig;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
-public class combineur {
-    public static ArrayList<String> parse(ArrayList<String> t) {
-        //Instanciation des variables
-        String racine;
-        ArrayList<String> ch = new ArrayList<String>();
-        ArrayList<String> h = new ArrayList<String>();
-        ArrayList<String> result = new ArrayList<String>();
-        LinkedList<String> ret = new LinkedList<String>();
+public class Combineur {
 
-        int i, a;
-        //Dans le cas ou le mot est composé d'un seul caractère
-        if (t.size() == 1) {
-            return t;
-        } else {
-            //On boucle sur toute les lettres
-            for (i = 0; i < t.size(); i++) {
-                //on récupére la lettre courante
-                racine = t.get(i);
-                if (ret.indexOf(racine) >= 0) {
-                } else {
-                    ret.add(racine);
-                    h.clear();
-                    h.addAll(t);
-                    try {
-                        //on supprime les doublons
-                        h.remove(i);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage() + t.size());
-                    }
-                    a = result.size();
-                    ch = parse(h);
-                    result.addAll(ch);
-                    for (int j = a; j < result.size(); j++) {
-                        result.set(j, racine + result.get(j));
-                    }
-                }
-            }
-            return result;
+    public static ArrayList<String> parse(ArrayList<String> inputLetters) {
+        if (inputLetters.size() == 1) {
+            return inputLetters;
         }
 
-    }
+        ArrayList<String> childPermutations;
+        ArrayList<String> remainingLetters = new ArrayList<>();
+        ArrayList<String> permutationResults = new ArrayList<>();
+        LinkedList<String> processedRoots = new LinkedList<>();
 
-
-    public static ArrayList<String> to_create_combin(ArrayList<String> letter)
-    {
-        ArrayList<String> res = new ArrayList<String>();
-        for(int i = 0; i < letter.size();i++)
-        {
-            String add = letter.get(i);
-            for(int j = 0; j < letter.size();j++)
-            {
-                if(!res.contains(add))
-                {
-                    res.add(add);
+        for (int index = 0; index < inputLetters.size(); index++) {
+            String currentRootLetter = inputLetters.get(index);
+            if (!processedRoots.contains(currentRootLetter)) {
+                processedRoots.add(currentRootLetter);
+                remainingLetters.clear();
+                remainingLetters.addAll(inputLetters);
+                try {
+                    remainingLetters.remove(index);
+                } catch (Exception exception) {
+                    System.out.println(exception.getMessage() + inputLetters.size());
                 }
-                if (!add.contains(letter.get(j)))
-                    add += letter.get(j);
+
+                int previousResultSize = permutationResults.size();
+                childPermutations = parse(remainingLetters);
+                permutationResults.addAll(childPermutations);
+
+                for (int subIndex = previousResultSize; subIndex < permutationResults.size(); subIndex++) {
+                    permutationResults.set(subIndex, currentRootLetter + permutationResults.get(subIndex));
+                }
             }
-            if (!res.contains(add))
-                res.add(add);
         }
-        return res;
+        return permutationResults;
     }
 
-    public static String best_solution(ArrayList<String> letter, Dawg graph)
-    {
-        int max = 0;
-        ArrayList<String> tmp = to_create_combin(letter);
-        ArrayList<String> res1 = new ArrayList<String>();
-        for(int i = 0; i < tmp.size();i++)
-        {
-            ArrayList<String> res = new ArrayList<String>();
-            ArrayList<String> ab = test(tmp.get(i));
-            res = parse(ab);
-            ArrayList<String> test = new ArrayList<String>();
-            for(int j = 0; j < res.size();j++)
-            {
-                int cost = valuer_of_string(res.get(j));
-                if (max >= cost)
+    public static ArrayList<String> to_create_combin(ArrayList<String> availableLetters) {
+        ArrayList<String> combinationList = new ArrayList<>();
+        int letterCount = availableLetters.size();
+        if (letterCount == 0) {
+            return combinationList;
+        }
+
+        int totalSubsets = 1 << letterCount;
+        for (int mask = 1; mask < totalSubsets; mask++) {
+            StringBuilder currentSubsetBuilder = new StringBuilder();
+            for (int index = 0; index < letterCount; index++) {
+                if ((mask & (1 << index)) != 0) {
+                    currentSubsetBuilder.append(availableLetters.get(index));
+                }
+            }
+            String subsetString = currentSubsetBuilder.toString();
+            if (!combinationList.contains(subsetString)) {
+                combinationList.add(subsetString);
+            }
+        }
+        return combinationList;
+    }
+
+    public static String best_solution(ArrayList<String> rackLetters, Dawg dawgGraph) {
+        int maximumScore = 0;
+        ArrayList<String> rawCombinations = to_create_combin(rackLetters);
+        ArrayList<String> formattedSolutions = new ArrayList<>();
+
+        for (String combination : rawCombinations) {
+            ArrayList<String> characterList = test(combination);
+            ArrayList<String> wordPermutations = parse(characterList);
+            ArrayList<String> validCandidateWords = new ArrayList<>();
+
+            for (String wordCandidate : wordPermutations) {
+                int wordScore = valuer_of_string(wordCandidate);
+                if (wordScore <= maximumScore) {
                     continue;
-                else {
-                        if (graph.word_existe(graph,res.get(j),0)) {
-                            test.add(res.get(j));
-                            max = cost;
-                        }
+                }
+                if (dawgGraph.word_existe(dawgGraph, wordCandidate.toUpperCase(), 0)) {
+                    validCandidateWords.add(wordCandidate);
+                    maximumScore = wordScore;
                 }
             }
-            if (test.size() > 0 && !(res1.contains(test)))
-                res1.add(test.toString());
+            if (!validCandidateWords.isEmpty() && !formattedSolutions.contains(validCandidateWords.toString())) {
+                formattedSolutions.add(validCandidateWords.toString());
+            }
         }
-        int pos = res1.size() - 1;
-        return enleve_crochet(res1.get(pos));
-
+        if (formattedSolutions.isEmpty()) {
+            return "";
+        }
+        int lastIndex = formattedSolutions.size() - 1;
+        return enleve_crochet(formattedSolutions.get(lastIndex));
     }
 
-    public static String enleve_crochet(String tmp)
-    {
-        String result = "";
-        for(int i = 1; i < tmp.length() - 1; i++)
-        {
-            result += tmp.charAt(i);
-        }
-        return result;
-
+    public static String enleve_crochet(String formattedText) {
+        if (formattedText.length() <= 2) return formattedText;
+        return formattedText.substring(1, formattedText.length() - 1);
     }
 
-
-    public static ArrayList<String> test(String letter)
-    {
-        ArrayList<String > res = new ArrayList<String>();
-        for(int i = 0; i < letter.length();i++)
-        {
-            char t = letter.charAt(i);
-            res.add(Character.toString(t));
+    public static ArrayList<String> test(String inputString) {
+        ArrayList<String> characterList = new ArrayList<>();
+        for (int i = 0; i < inputString.length(); i++) {
+            characterList.add(Character.toString(inputString.charAt(i)));
         }
-        return res;
-    }
-    public static boolean existenceMot(String str) throws IOException {
-        return Files.readAllLines(new File("tests/ressources/dico/dico.txt").toPath()).contains(str);
+        return characterList;
     }
 
-    public static int valuer_of_string(String a)
-    {
-        int res = 0;
-        for(int i = 0; i < a.length();i++)
-        {
-            res += convert_cost(a.charAt(i));
+    public static boolean existenceMot(String wordToValidate) {
+        try (BufferedReader dictionaryReader = new BufferedReader(new InputStreamReader(
+                Combineur.class.getResourceAsStream(AssetsConfig.DICO_PATH), StandardCharsets.UTF_8))) {
+            return dictionaryReader.lines().anyMatch(line -> line.equalsIgnoreCase(wordToValidate));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return false;
         }
-        return res;
     }
 
-    public static int convert_cost(char a) {
-        if (a == 'a' || a == 'e' || a == 'n' || a == 's' || a == 'i' || a == 'r' || a == 't' || a == 'u' || a == 'd' || a == 'l') {
-            return 1;
+    public static int valuer_of_string(String word) {
+        int totalScore = 0;
+        for (int index = 0; index < word.length(); index++) {
+            totalScore += convert_cost(word.charAt(index));
         }
-        if (a == 'd' || a == 'm' || a == 'g') {
-            return 2;
-        }
-        if (a == 'b' || a == 'c' || a == 'p') {
-            return 3;
-        }
-        if (a == 'f' || a == 'h' || a == 'v') {
-            return 4;
-        }
-        if (a == 'j' || a == 'q' ) {
-            return 8;
-        }
-        if (a == 'k' || a == 'w' || a == 'x' || a == 'y' || a == 'z') {
-            return 10;
-        }
-        return 0;
+        return totalScore;
+    }
 
+    public static int convert_cost(char letter) {
+        return switch (Character.toLowerCase(letter)) {
+            case 'a', 'e', 'i', 'l', 'n', 'o', 'r', 's', 't', 'u' -> 1;
+            case 'd', 'g', 'm' -> 2;
+            case 'b', 'c', 'p' -> 3;
+            case 'f', 'h', 'v' -> 4;
+            case 'j', 'q' -> 8;
+            case 'k', 'w', 'x', 'y', 'z' -> 10;
+            default -> 0;
+        };
+    }
+
+    public static ArrayList<String> combinaisons_valides(String rackString, Dawg dawgGraph) {
+        ArrayList<String> rackLetters = test(rackString.toLowerCase());
+        ArrayList<String> combinationList = to_create_combin(rackLetters);
+        ArrayList<String> validWordsResult = new ArrayList<>();
+
+        for (String combination : combinationList) {
+            ArrayList<String> wordPermutations = parse(test(combination));
+            for (String permutation : wordPermutations) {
+                if (dawgGraph != null && dawgGraph.word_existe(dawgGraph, permutation.toUpperCase(), 0)) {
+                    if (!validWordsResult.contains(permutation)) {
+                        validWordsResult.add(permutation);
+                    }
+                }
+            }
+        }
+        return validWordsResult;
     }
 }

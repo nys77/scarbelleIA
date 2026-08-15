@@ -1,20 +1,18 @@
 package Model;
 
-import javax.swing.*;
+public class Letter {
 
-public class Letter extends JPanel {
+    private String url_;
+    private Character value_;
 
-    String url_;
-    Character value_;
-
-    public void Letter()
-    {
-
+    public Letter() {
     }
 
+    public Letter(Character value) {
+        this.value_ = value;
+    }
 
-    public Character get_value()
-    {
-        return 'A';
+    public Character get_value() {
+        return value_ != null ? value_ : 'A';
     }
 }
