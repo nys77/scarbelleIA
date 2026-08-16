@@ -12,8 +12,9 @@
 ## 🚀 Fonctionnalités Principales
 
 - **🎮 Modes de Jeu** :
-  - **Joueur vs Joueur (PvP)** : Mode classique à deux joueurs sur la même machine.
-  - **Joueur vs IA (PvE)** : Affrontez une IA intelligente. L'IA possède systématiquement l'initiative du premier coup et réagit automatiquement lors d'un "Passer le tour".
+  - **Joueur vs Joueur (PvP)** : Mode classique à deux joueurs humains sur la même machine.
+  - **Joueur vs IA (PvE)** : Affrontez une IA intelligente ("IA Scarbelle"). L'IA possède l'initiative du premier coup.
+  - **IA vs IA (EvE)** : Observez deux IA ("IA Alpha" vs "IA Scarbelle") s'affronter en direct avec mise à jour automatique du plateau et bouton de pause/reprise.
 - **🤖 Intelligence Artificielle Équitable & Strictement Conforme** :
   - **Non-triche** : L'IA agit exclusivement à partir de ses 7 lettres et de la grille. Elle n'a aucun accès aux lettres du sac.
   - **Validation Anti-Écrasement & Mots Croisés** : Interdiction absolue d'écraser des tuiles occupées. Validation rigoureuse de tous les mots croisés et extensions produits dans le dictionnaire DAWG (`validateCrossWordsAndExtensions`).

@@ -75,28 +75,37 @@ public class Main {
         }
     }
 
-    public  void tirage(int n)
+    public void tirage(int n)
     {
-        for(int i = 0; i < n;i++)
+        if (model_ != null && model_.get_rand() != null && !model_.get_rand().isEmpty() && n > 0)
         {
+            int drawCount = Math.min(n, model_.get_rand().size());
             Random rand = new Random();
-            int r = rand.nextInt(model_.get_rand().size() -1) ;
-            char to_add = model_.get_rand().get(r);
-            Character update = Character.valueOf(to_add);
-
-            while (!(can_take(update)))
+            for (int i = 0; i < drawCount; i++)
             {
-                rand = new Random();
-                r = rand.nextInt(model_.get_rand().size() -1) ;
-                to_add = model_.get_rand().get(r);
-                update = Character.valueOf(to_add);
+                if (model_.get_rand().isEmpty()) break;
+
+                int r = rand.nextInt(model_.get_rand().size());
+                char to_add = model_.get_rand().get(r);
+                Character update = Character.valueOf(to_add);
+
+                int attempts = 0;
+                while (!can_take(update) && attempts < 50 && !model_.get_rand().isEmpty())
+                {
+                    r = rand.nextInt(model_.get_rand().size());
+                    to_add = model_.get_rand().get(r);
+                    update = Character.valueOf(to_add);
+                    attempts++;
+                }
+                model_.get_rand().remove(r);
+                update_model(update);
+                charac_main.add(update);
             }
-            model_.get_rand().remove(r);
-            update_model(update);
-            charac_main.add(update);
         }
         player1.removeAll();
-        player1.setPreferredSize(new Dimension((int) fenetre.getWidth() ,(int) (0.1 * fenetre.getHeight())));
+        if (fenetre != null) {
+            player1.setPreferredSize(new Dimension((int) fenetre.getWidth(), (int) (0.1 * fenetre.getHeight())));
+        }
         panel_main = new ArrayList<JPanel>();
         Border blackline = BorderFactory.createLineBorder(Color.black,1);
         for(int i = 0; i < charac_main.size();i++)

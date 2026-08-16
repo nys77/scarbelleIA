@@ -77,16 +77,21 @@ public class Init {
         gridWrapper.add(pan, BorderLayout.CENTER);
         t.add(gridWrapper, BorderLayout.CENTER);
 
-        player1 = new HumanPlayer(t, 1, model, "Joueur 1");
-        if (gameMode == GameMode.PVE) {
+        if (gameMode == GameMode.EVE) {
+            player1 = new AIPlayer(t, 1, model, "IA Alpha", new ParallelDAWGStrategy());
+            player2 = new AIPlayer(t, 2, model, "IA Scarbelle", new ParallelDAWGStrategy());
+        } else if (gameMode == GameMode.PVE) {
+            player1 = new HumanPlayer(t, 1, model, "Joueur 1");
             player2 = new AIPlayer(t, 2, model, "IA Scarbelle", new ParallelDAWGStrategy());
         } else {
+            player1 = new HumanPlayer(t, 1, model, "Joueur 1");
             player2 = new HumanPlayer(t, 2, model, "Joueur 2");
         }
         player1.getMain().print_main();
         player2.getMain().print_main();
 
         // Connexion des boutons d'action du tableau de bord
+        scoreboard.setPlayWordAction(e -> handlePlayHumanWord(scoreboard, model, t));
         scoreboard.setPassAction(e -> handlePassTurn(scoreboard, model));
         scoreboard.setExchangeAction(e -> handleExchangeLetters(scoreboard, model));
         scoreboard.setReplayAction(e -> handleReplayGame(t));
@@ -94,7 +99,26 @@ public class Init {
         t.setMinimumSize(new Dimension(1150, 880));
         t.setVisible(true);
 
-        if (gameMode == GameMode.PVE) {
+        if (gameMode == GameMode.EVE) {
+            scoreboard.configureEvEMode(() -> toggleEvEPause(scoreboard));
+            // IA Alpha pose le premier mot
+            String bestOption = Combineur.best_solution(conv(player1.getMain().charac_main), graph_);
+            System.out.println("IA Alpha Premier Mot : " + bestOption);
+            if (bestOption != null && !bestOption.isEmpty()) {
+                String word = bestOption.toUpperCase();
+                int score = Combineur.valuer_of_string(word);
+                Move firstMove = new Move(7, 7, false, word, score);
+                player1.executeMove(firstMove, map_);
+                placeMoveOnBoard(7, 7, false, word);
+                scoreboard.updatePlayer1Score("IA Alpha", player1.getPoint());
+                player1.getMain().print_main();
+            }
+            player1.setCanPlay(false);
+            player2.setCanPlay(true);
+            scoreboard.updateTurn("Tour : IA Scarbelle");
+            scoreboard.updateRemainingTiles(model.get_rand().size());
+            scheduleEvENextTurn(scoreboard);
+        } else if (gameMode == GameMode.PVE) {
             // L'IA commence toujours à jouer le premier mot en mode PVE
             String bestOption = Combineur.best_solution(conv(player2.getMain().charac_main), graph_);
             System.out.println("IA Premier Mot : " + bestOption);
@@ -128,6 +152,54 @@ public class Init {
     }
 
     private int consecutivePasses = 0;
+    private javax.swing.Timer eveTimer_;
+    private boolean isEvEPaused = false;
+
+    private void toggleEvEPause(ScoreboardPanel scoreboard) {
+        isEvEPaused = !isEvEPaused;
+        scoreboard.setEvEPauseState(isEvEPaused);
+        if (!isEvEPaused) {
+            scheduleEvENextTurn(scoreboard);
+        } else if (eveTimer_ != null) {
+            eveTimer_.stop();
+        }
+    }
+
+    private void scheduleEvENextTurn(ScoreboardPanel scoreboard) {
+        if (gameMode_ != GameMode.EVE || isEvEPaused) return;
+        if (eveTimer_ == null) {
+            eveTimer_ = new javax.swing.Timer(1200, e -> {
+                if (!isEvEPaused) {
+                    Player activeAI = player1.canPlay() ? player1 : player2;
+                    executeAITurn(scoreboard, activeAI);
+                }
+            });
+            eveTimer_.setRepeats(false);
+        }
+        eveTimer_.restart();
+    }
+
+    private void handlePlayHumanWord(ScoreboardPanel scoreboard, Model model, JFrame frame) {
+        if (!player1.canPlay()) {
+            System.out.println("Action ignorée : ce n'est pas le tour du Joueur 1.");
+            return;
+        }
+
+        View.Components.HumanMoveDialog dialog = new View.Components.HumanMoveDialog(frame, player1, map_, graph_);
+        dialog.setVisible(true);
+
+        Move humanMove = dialog.getValidatedMove();
+        if (humanMove != null && humanMove.score() > 0 && humanMove.word() != null && !humanMove.word().isEmpty()) {
+            player1.executeMove(humanMove, map_);
+            placeMoveOnBoard(humanMove.startX(), humanMove.startY(), humanMove.isHorizontal(), humanMove.word());
+            scoreboard.updatePlayer1Score("Joueur 1", player1.getPoint());
+            consecutivePasses = 0;
+            scoreboard.updateRemainingTiles(model_.get_rand().size());
+            System.out.println("Joueur 1 a joué : " + humanMove.word() + " (+" + humanMove.score() + " pts)");
+
+            switchTurn(scoreboard);
+        }
+    }
 
     private void handlePassTurn(ScoreboardPanel scoreboard, Model model) {
         if (!player1.canPlay()) {
@@ -190,63 +262,68 @@ public class Init {
         player1.setCanPlay(!p1Turn);
         player2.setCanPlay(p1Turn);
 
-        String activeName = !p1Turn ? "Joueur 1" : (gameMode_ == GameMode.PVE ? "IA Scarbelle" : "Joueur 2");
-        scoreboard.updateTurn("Tour : " + activeName);
+        Player activePlayer = !p1Turn ? player1 : player2;
+        scoreboard.updateTurn("Tour : " + activePlayer.getName());
 
         if (gameMode_ == GameMode.PVE && player2.canPlay()) {
-            SwingUtilities.invokeLater(() -> executeAITurn(scoreboard));
+            SwingUtilities.invokeLater(() -> executeAITurn(scoreboard, player2));
+        } else if (gameMode_ == GameMode.EVE && !isEvEPaused) {
+            scheduleEvENextTurn(scoreboard);
         }
     }
 
-    private void executeAITurn(ScoreboardPanel scoreboard) {
-        if (gameMode_ != GameMode.PVE || !player2.canPlay()) return;
+    private void executeAITurn(ScoreboardPanel scoreboard, Player activeAI) {
+        if (activeAI == null || !activeAI.canPlay()) return;
 
-        Move aiMove = player2.playTurn(map_.get_matrix(), graph_);
+        Move aiMove = activeAI.playTurn(map_.get_matrix(), graph_);
         if (aiMove != null && aiMove.score() > 0 && aiMove.word() != null && !aiMove.word().isEmpty()) {
-            player2.executeMove(aiMove, map_);
+            activeAI.executeMove(aiMove, map_);
             placeMoveOnBoard(aiMove.startX(), aiMove.startY(), aiMove.isHorizontal(), aiMove.word());
-            scoreboard.updatePlayer2Score("IA Scarbelle", player2.getPoint());
+            if (activeAI.getId() == 1) {
+                scoreboard.updatePlayer1Score(activeAI.getName(), activeAI.getPoint());
+            } else {
+                scoreboard.updatePlayer2Score(activeAI.getName(), activeAI.getPoint());
+            }
             consecutivePasses = 0;
-            System.out.println("IA Scarbelle a joué : " + aiMove.word() + " (+" + aiMove.score() + " pts)");
-        } else if (model_.get_rand().size() >= 7 && player2 instanceof AIPlayer aiPlayer) {
+            System.out.println(activeAI.getName() + " a joué : " + aiMove.word() + " (+" + aiMove.score() + " pts)");
+        } else if (model_.get_rand().size() >= 7 && activeAI instanceof AIPlayer aiPlayer) {
             List<Character> toExchange = aiPlayer.chooseLettersToExchange();
             if (toExchange != null && !toExchange.isEmpty()) {
                 ArrayList<String> toExStr = new ArrayList<>();
                 for (Character c : toExchange) {
                     toExStr.add(Character.toString(c));
                 }
-                player2.getMain().remove_caracter(toExStr);
+                activeAI.getMain().remove_caracter(toExStr);
 
                 // Pioche d'abord les nouvelles lettres
-                player2.getMain().tirage(toExchange.size());
+                activeAI.getMain().tirage(toExchange.size());
 
                 // Remet ensuite les lettres défaussées dans le sac
                 for (Character c : toExchange) {
                     model_.get_rand().add(c);
                 }
 
-                System.out.println("IA Scarbelle a optimisé sa main en échangeant " + toExchange.size() + " lettres.");
+                System.out.println(activeAI.getName() + " a optimisé sa main en échangeant " + toExchange.size() + " lettres.");
                 consecutivePasses++;
             } else {
-                System.out.println("IA Scarbelle n'a pas trouvé d'échange optimal et passe son tour.");
+                System.out.println(activeAI.getName() + " n'a pas trouvé d'échange optimal et passe son tour.");
                 consecutivePasses++;
             }
         } else {
-            System.out.println("IA Scarbelle a passé son tour (sac vide ou aucun coup possible).");
+            System.out.println(activeAI.getName() + " a passé son tour (sac vide ou aucun coup possible).");
             consecutivePasses++;
         }
 
-        scoreboard.updateRemainingTiles(model_.get_rand().size());
+        int bagCount = model_.get_rand().size();
+        scoreboard.updateRemainingTiles(bagCount);
 
-        if (consecutivePasses >= 6 || (consecutivePasses >= 3 && model_.get_rand().size() < 7)) {
+        if (consecutivePasses >= 6 || (consecutivePasses >= 3 && bagCount < 7)) {
+            if (eveTimer_ != null) eveTimer_.stop();
             triggerEndGame("3 passes consécutives avec sac insuffisant.");
             return;
         }
 
-        // Redonner la main au Joueur 1
-        player1.setCanPlay(true);
-        player2.setCanPlay(false);
-        scoreboard.updateTurn("Tour : Joueur 1");
+        switchTurn(scoreboard);
     }
 
     public void placeMoveOnBoard(int startX, int startY, boolean isHorizontal, String word) {

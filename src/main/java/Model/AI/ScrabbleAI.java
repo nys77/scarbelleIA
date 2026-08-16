@@ -218,23 +218,19 @@ public class ScrabbleAI {
 
         // A. Vérifier la séquence complète du mot principal (incluant préfixes/suffixes touchés)
         String fullMainWord = getFullWordAt(tempBoard, startX, startY, isHorizontal);
-        if (fullMainWord.length() > word.length()) {
-            if (!dawg.word_existe(dawg, fullMainWord, 0)) {
-                return false; // L'extension du mot principal est invalide (ex: EFAQ au lieu de FAQ)
-            }
+        if (!fullMainWord.isEmpty() && !dawg.word_existe(dawg, fullMainWord, 0)) {
+            return false; // Le mot principal (avec extensions préfixe/suffixe) doit obligatoirement exister dans le dictionnaire
         }
 
-        // B. Vérifier chaque mot croisé perpendiculaire formé par les nouvelles tuiles
+        // B. Vérifier chaque mot croisé perpendiculaire formé ou étendu par les tuiles du coup
         for (int i = 0; i < word.length(); i++) {
             int r = isHorizontal ? startX : startX + i;
             int c = isHorizontal ? startY + i : startY;
 
-            if (isEmptyCell(board, c, r)) {
-                String crossWord = getFullWordAt(tempBoard, r, c, !isHorizontal);
-                if (crossWord.length() > 1) {
-                    if (!dawg.word_existe(dawg, crossWord, 0)) {
-                        return false; // Mot croisé invalide formé perpendiculairement !
-                    }
+            String crossWord = getFullWordAt(tempBoard, r, c, !isHorizontal);
+            if (crossWord.length() > 1) {
+                if (!dawg.word_existe(dawg, crossWord, 0)) {
+                    return false; // Mot croisé invalide formé perpendiculairement !
                 }
             }
         }
@@ -243,6 +239,9 @@ public class ScrabbleAI {
     }
 
     private static String getFullWordAt(char[][] board, int r, int c, boolean isHorizontal) {
+        if (r < 0 || r >= 15 || c < 0 || c >= 15) return "";
+        if (isEmptyCell(board, c, r)) return "";
+
         if (isHorizontal) {
             int startC = c;
             while (startC > 0 && !isEmptyCell(board, startC - 1, r)) {
@@ -254,7 +253,7 @@ public class ScrabbleAI {
             }
             StringBuilder sb = new StringBuilder();
             for (int col = startC; col <= endC; col++) {
-                sb.append(board[r][col]);
+                sb.append(Character.toUpperCase(board[r][col]));
             }
             return sb.toString();
         } else {
@@ -268,7 +267,7 @@ public class ScrabbleAI {
             }
             StringBuilder sb = new StringBuilder();
             for (int row = startR; row <= endR; row++) {
-                sb.append(board[row][c]);
+                sb.append(Character.toUpperCase(board[row][c]));
             }
             return sb.toString();
         }

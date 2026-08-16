@@ -75,4 +75,17 @@ public class AIHandManagementTest {
         assertTrue(ai.getMain().charac_main.contains('r'));
         assertTrue(ai.getMain().charac_main.contains('q'));
     }
+
+    @Test
+    public void testTirageWithOneOrZeroRemainingTiles() {
+        // Test draw when bag has only 1 tile
+        model.get_rand().clear();
+        model.get_rand().add('Z');
+        assertDoesNotThrow(() -> ai.getMain().tirage(4), "Ne doit pas lever d'exception avec 1 seule lettre dans le sac");
+        assertEquals(1, ai.getMain().charac_main.size());
+
+        // Test draw when bag is empty
+        model.get_rand().clear();
+        assertDoesNotThrow(() -> ai.getMain().tirage(3), "Ne doit pas lever d'exception quand le sac est vide");
+    }
 }

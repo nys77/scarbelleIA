@@ -13,6 +13,7 @@ public class ScoreboardPanel extends JPanel implements GameStateObserver {
     private final JLabel player2ScoreLabel;
     private final JLabel remainingTilesLabel;
     private final JLabel turnLabel;
+    private final JButton playWordButton;
     private final JButton passButton;
     private final JButton exchangeButton;
     private final JButton replayButton;
@@ -53,9 +54,10 @@ public class ScoreboardPanel extends JPanel implements GameStateObserver {
         remainingTilesLabel.setMaximumSize(new Dimension(200, 35));
 
         // Action Buttons
+        playWordButton = createActionButton("🎯 Jouer un mot", new Color(16, 185, 129));
         passButton = createActionButton("⏭️ Passer le tour", new Color(100, 116, 139));
         exchangeButton = createActionButton("🔄 Échanger lettres", new Color(217, 119, 6));
-        replayButton = createActionButton("🔁 Rejouer la partie", new Color(16, 185, 129));
+        replayButton = createActionButton("🔁 Rejouer la partie", new Color(79, 70, 229));
 
         add(titleLabel);
         add(Box.createRigidArea(new Dimension(0, 15)));
@@ -67,6 +69,8 @@ public class ScoreboardPanel extends JPanel implements GameStateObserver {
         add(Box.createRigidArea(new Dimension(0, 15)));
         add(remainingTilesLabel);
         add(Box.createRigidArea(new Dimension(0, 20)));
+        add(playWordButton);
+        add(Box.createRigidArea(new Dimension(0, 10)));
         add(passButton);
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(exchangeButton);
@@ -105,6 +109,10 @@ public class ScoreboardPanel extends JPanel implements GameStateObserver {
         return btn;
     }
 
+    public void setPlayWordAction(ActionListener listener) {
+        playWordButton.addActionListener(listener);
+    }
+
     public void setPassAction(ActionListener listener) {
         passButton.addActionListener(listener);
     }
@@ -137,6 +145,24 @@ public class ScoreboardPanel extends JPanel implements GameStateObserver {
 
     public void updateTurn(String turnText) {
         turnLabel.setText(turnText);
+    }
+
+    public void configureEvEMode(Runnable togglePauseCallback) {
+        playWordButton.setText("⏸️ Mettre en pause");
+        playWordButton.setBackground(new Color(239, 68, 68));
+        playWordButton.addActionListener(e -> togglePauseCallback.run());
+        passButton.setEnabled(false);
+        exchangeButton.setEnabled(false);
+    }
+
+    public void setEvEPauseState(boolean paused) {
+        if (paused) {
+            playWordButton.setText("▶️ Reprendre le duel");
+            playWordButton.setBackground(new Color(16, 185, 129));
+        } else {
+            playWordButton.setText("⏸️ Mettre en pause");
+            playWordButton.setBackground(new Color(239, 68, 68));
+        }
     }
 
     @Override

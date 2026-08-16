@@ -63,8 +63,8 @@ public class HomeView extends JFrame {
         // Zone centrale des boutons de mode de jeu
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setOpaque(false);
-        buttonsPanel.setLayout(new GridLayout(2, 1, 20, 20));
-        buttonsPanel.setBorder(new EmptyBorder(40, 60, 40, 60));
+        buttonsPanel.setLayout(new GridLayout(3, 1, 12, 12));
+        buttonsPanel.setBorder(new EmptyBorder(25, 60, 25, 60));
 
         JButton pvpButton = createStyledButton("⚔️  Joueur vs Joueur (PvP)", new Color(79, 70, 229), new Color(99, 102, 241));
         pvpButton.addActionListener(e -> startGame(GameMode.PVP));
@@ -72,8 +72,12 @@ public class HomeView extends JFrame {
         JButton pveButton = createStyledButton("🤖  Joueur vs IA (PvE)", new Color(13, 148, 136), new Color(20, 184, 166));
         pveButton.addActionListener(e -> startGame(GameMode.PVE));
 
+        JButton eveButton = createStyledButton("🤖  IA vs IA 🤖 (Duel EvE)", new Color(147, 51, 234), new Color(168, 85, 247));
+        eveButton.addActionListener(e -> startGame(GameMode.EVE));
+
         buttonsPanel.add(pvpButton);
         buttonsPanel.add(pveButton);
+        buttonsPanel.add(eveButton);
 
         // Pied de page
         JLabel footerLabel = new JLabel("Propulsé par DAWG & Java 21");
