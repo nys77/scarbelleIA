@@ -18,10 +18,12 @@ View/Main.class
 Main.class
 Model/AI/ParallelDAWGStrategy.class
 Model/AI/ScrabbleAI$Anchor.class
+View/Components/HumanMoveDialog$1.class
 View/Combineur.class
 Model/Board/Cell$Type.class
 Model/Letter.class
 View/Components/GameStateObserver.class
+View/Components/HumanMoveDialog.class
 View/Screens/HomeView$1.class
 Model/Board/Map.class
 View/Components/Panel.class
